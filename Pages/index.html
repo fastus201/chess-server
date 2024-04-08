@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess</title>
+
+
+    <link rel="stylesheet" href="../public/Lobby/index.css">    <!--For lobby-->
+    <link rel="stylesheet" href="../public/Game/index.css">     <!--For game-->
+
+
+
+
+    <script src="../public/Lobby/index.js" type="module"></script>
+
+</head>
+<body>
+    <div id="main-content">
+        <label>Inserisci il tuo nickname:</label>
+        <input type="text" id="nickname">
+        <button id="start-game-btn">
+            Cerca partita
+        </button>
+    </div>
+
+
+    <!--For chess game-->
+    <div id="game-container">
+        <div class="player-div">
+            <div class="player-name" id="up-name"></div>
+            <div class="player-pieces" id="up-pieces">
+    
+            </div>
+            <div class="score-eaten-pieces" id="score-up">
+            </div>
+        </div>
+        <div id="chessboard">
+    
+            <div id="upgrade-menu">
+    
+            </div>
+        </div>
+        <div class="player-div">
+            <div class="player-name" id="down-name"></div>
+            <div class="player-pieces" id="down-pieces">
+    
+            </div>
+            <div class="score-eaten-pieces" id="score-down">
+            </div>
+        </div>
+    </div>
+</body>
+</html>

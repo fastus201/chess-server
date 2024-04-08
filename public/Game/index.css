@@ -1,0 +1,202 @@
+:root{
+    --height:8;
+    --width:8;
+    --sizeCella:100px;
+    --capturedSize:30px;
+    --color1:/*#E9EDCC*/#84774f;
+    --color2:/*#779954*/#dbe3ad;
+
+    --selected-light:/*#bfa75c*/ #b08912;
+    --selected-dark:/*#bfa75c*/ #dcbe6a;
+
+   --darkBackground:/*#302E2B*/orange;
+    --delay:.2s;
+    --fontSize:20px;
+
+}   
+*{
+    box-sizing: border-box;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+body{
+    background-color: var(--darkBackground);
+}
+#game-container{
+    display: none;    
+}
+#chessboard{
+    position: relative;
+    width: calc(var(--sizeCella) * var(--width));
+    height: calc(var(--sizeCella) * var(--height));
+    display: grid;
+    grid-template-columns: repeat(var(--height),auto);
+}
+
+.obfuscated{
+    opacity: .8;
+}
+
+.square{
+    width: var(--sizeCella);
+    height: var(--sizeCella);
+    position: relative;
+    --display: none;
+    --display2:none;
+}
+
+
+.square-selected{
+    border:5px solid white;
+}
+
+.selected-light{
+    background-color: var(--selected-light) !important;
+}
+.selected-dark{
+    background-color: var(--selected-dark)!important;
+}
+
+.color-1 {
+    background-color: var(--color1);
+}
+
+.color-2 {
+    background-color: var(--color2);
+}
+
+/*Il pezzo di scacchi*/
+.piece{
+    position: absolute;
+    width: var(--sizeCella);
+    height: var(--sizeCella);
+    cursor: pointer;
+    transition: var(--delay) linear;
+    user-select: none;
+}
+
+/*Tolgo le transition quando stai grabbando un pezzo*/
+.notransition{
+    transition: none !important;
+}
+
+/*Il cursor pointer, lo uso quando seleziono un pezzo da muovere*/
+.cursor-pointer{
+    cursor: pointer;
+}
+
+/*Il pezzo che stai draggando è messo sopra gli altri*/
+.z-index{
+    z-index: 10;
+}
+
+/*Mostra il puntino in cui puoi muoverti*/
+.square::after{
+    content: "";
+    position: absolute;
+    display: var(--display);
+    width: calc(var(--sizeCella) / 3);
+    height: calc(var(--sizeCella) / 3);
+
+    left: 50%;
+    transform: translate(-50%, -50%);
+    top: 50%;
+
+    background-color: rgba(0, 0, 0, .24);
+    border-radius: 50%;
+
+}
+/*Mostra il cerchio quando puoi mangiare*/
+
+.square::before{
+    content: "";
+    position: absolute;
+    display: var(--display2);
+    width: calc(var(--sizeCella));
+    height: calc(var(--sizeCella));
+    box-sizing: border-box;
+    
+
+    left: 50%;
+    transform: translate(-50%, -50%);
+    top: 50%;
+
+    border: 9px solid rgba(0, 0, 0, .24);
+    border-radius: 50%;
+}
+
+.text{
+    font-weight: bold;
+    position: absolute;
+    left:calc(var(--x) * var(--sizeCella));
+    top:calc(var(--y) * var(--sizeCella));
+    z-index: 1;
+    padding: 5px;
+    pointer-events: none;
+}
+.text::after{
+    content: var(--value);
+}
+
+.transformed-text{
+    transform: translate(calc(var(--sizeCella) / 1.25),calc(var(--sizeCella) / 1.4));
+}
+
+.king-check{
+    background-color: rgba(255, 0, 0,.5);
+}
+
+#upgrade-menu{
+    z-index: 100;
+    position: absolute;
+    width: calc(var(--sizeCella));
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    box-shadow: 3px 3px 10px rgba(0,0,0,.50);
+    background-color: white;
+}
+
+.upgrade-piece{
+    width: var(--sizeCella);
+    height: var(--sizeCella);
+}
+
+
+/*Parte coi giocatori*/
+
+.player-div{
+    width: calc(var(--sizeCella) * var(--width));
+    color: black;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+    gap: 20px;
+   
+}
+
+.player-name{
+    font-weight: bolder;
+    font-size: var(--fontSize);
+}
+
+.player-pieces{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height:var(--capturedSize);
+}
+
+.captured-piece{
+    width: var(--capturedSize);
+    height: var(--capturedSize);
+}
+
+.score-eaten-pieces{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bolder;
+    font-size: var(--fontSize);
+    color: black;
+}
