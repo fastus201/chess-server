@@ -44,6 +44,12 @@ app.get("/",(req,res)=>{
 });
 
 io.on("connection",(socket)=>{
+    //When a socket is disconnecting
+    socket.on("disconnecting",()=>{
+        let id = socket.id;
+        if(possiblePerson.socketId == id)   //If you were the person who was looking for a game
+            deletePossiblePerson();
+    });
 
     //when a user is looking for a game
     socket.on("lookForGame",(nickname,callback)=>{
@@ -61,6 +67,11 @@ io.on("connection",(socket)=>{
         }
         //the game is starting
         else{
+            //If the same client is searching two games 
+            if(socket.id == possiblePerson.socketId){
+                callback({ noplayer: true });
+                return;
+            }
             //ok, there i have to decide who is white and bkack
             let colors = ["white","black"].sort(()=>.5-Math.random());
             //i return to the client that game has started
@@ -76,10 +87,7 @@ io.on("connection",(socket)=>{
             });
 
 
-            //clear possiblePerson information
-            delete possiblePerson.player;
-            delete possiblePerson.socketId;
-            delete possiblePerson.matchId;
+            deletePossiblePerson();
 
         }
     });
@@ -106,6 +114,16 @@ io.on("connection",(socket)=>{
         }
         socket.to(room).emit("movePieceFromServer",data);
     });
+
+    /**
+     * @description Delete possiblePerson information
+     */
+    function deletePossiblePerson() {
+        //clear possiblePerson information
+        delete possiblePerson.player;
+        delete possiblePerson.socketId;
+        delete possiblePerson.matchId;
+    }
 
     /**
      * @description Function that generates the random code for chess games
