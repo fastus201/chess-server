@@ -75,7 +75,16 @@ export default class Game {
      */
     #createBoard() {
         const board = [];
-        const originalBoard = this.#getDisposition();  //ricavo la disposzione per cui mettere i pezzi
+        let originalBoard = this.#getDisposition();  //ricavo la disposzione per cui mettere i pezzi
+        //Se la posizione è sopra, reverso tutta la matrice
+        if(this.#positions.white == "up"){
+            originalBoard.forEach(row=>row.reverse());
+            let newArray = [];
+            for (let i = this.width - 1; i >= 0; --i)
+                newArray.push(originalBoard[i]);
+            originalBoard = newArray;
+            console.log(originalBoard);
+        }
         let uniqeids = 1;
         for (let i = 0; i < this.#height; ++i) {
             board[i] = [];  //creo un vettore ad ogni riga, in modo da creare una matrice

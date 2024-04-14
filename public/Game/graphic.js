@@ -40,8 +40,10 @@ export function createChessboard (game,gameClientInfo) {
                         text.style.setProperty("--y", i);
                         text.classList.add("transformed-text");
                         text.style.color = "var(--color"+ ( (j % 2) + 1)+")";
-                            text.style.setProperty("--value", JSON.stringify(["a","b","c","d","e","f", "g", "h"][j]));
-                        
+                        if(gameClientInfo.myColor == "black")
+                            text.style.setProperty("--value", JSON.stringify(["a","b","c","d","e","f", "g", "h"].reverse()[j]));
+                        else
+                            text.style.setProperty("--value", JSON.stringify(["a", "b", "c", "d", "e", "f", "g", "h"][j]));
                         board.append(text);
                     }
                 }
@@ -101,11 +103,6 @@ export function createPiece(x, y, name, color,piecesValue,style) {
     div.setAttribute("name",name);
     div.setAttribute("value", piecesValue[name])
     div.setAttribute("src", "./public/Game/img/Piece/" + color + style.value+"/" + name + style.format);
-
-    div.addEventListener("contextmenu",()=>{
-        console.log("CLICCHI CON IL TASTO DESTRO!!!");
-    })
-    
     if (name == "King") {
         div.classList.add("King-" + color);
     }
@@ -159,15 +156,16 @@ function dragElement(element, game, gameClientInfo) {
         }
         //dopo che ho controllato se dovevo mangiare, controllo i turni
         //se non è il mio turno annullo tutto oppure se la partita è bloccata
-        if (gameClientInfo.ended || gameClientInfo.stopped || element.getAttribute("disabled")  /**/ || gameClientInfo.myColor != this.getAttribute("color")) {
+        if (gameClientInfo.ended || gameClientInfo.stopped || element.getAttribute("disabled")  /**/ || !isMyTurn(this.getAttribute("color"), game.turno, gameClientInfo.currentMossa) ||gameClientInfo.myColor != this.getAttribute("color")) {
             document.onmouseup = null;
             document.onmousemove = null;
             return;
         }
+        /*TODO
         //Anche se non è il tuo turno, puoi vedere dove potresti muoverti
         if (!isMyTurn(this.getAttribute("color"), game.turno, gameClientInfo.currentMossa)){
             gameClientInfo.showPossibleMoves = true;
-        }
+        }*/
 
 
         //aggiorno la posizione iniziale quando clicco su un pezzo

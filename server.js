@@ -97,19 +97,21 @@ io.on("connection",(socket)=>{
      */data)=>{
         let room = Array.from(socket.rooms)[1];
         //I have to reverse every y coords present (The chessboard is reserved in every player!!)
-        const reverseY = (coord) =>{
+        const reverseCoord = (coord) =>{
             return Math.abs(coord - standardInfo.height + 1)
         }
         //These data are always present
-        data.y = reverseY(data.y);
-        data.move.y = reverseY(data.move.y);
-
-        if(data.move.castle)
-            data.move.rook.y = reverseY(data.move.rook.y);
-
+        data.x = reverseCoord(data.x);
+        data.y = reverseCoord(data.y);
+        data.move.y = reverseCoord(data.move.y);
+        data.move.x = reverseCoord(data.move.x);
+        if(data.move.castle){
+            data.move.rook.y = reverseCoord(data.move.rook.y);
+            data.move.rook.x = reverseCoord(data.move.rook.x);
+        }
         if(data.move.enPassantPiece){
-            data.move.enPassantPiece.y = reverseY(data.move.enPassantPiece.y);
-
+            data.move.enPassantPiece.y = reverseCoord(data.move.enPassantPiece.y);
+            data.move.enPassantPiece.x = reverseCoord(data.move.enPassantPiece.x);
         }
         socket.to(room).emit("movePieceFromServer",data);
         //If the game has ended in some way
