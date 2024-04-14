@@ -8,6 +8,14 @@ import { ClientGame, showEndGame,myModal } from "../Lobby/index.js";
  * @param {ClientGame} gameClientInfo Contiene le informazioni aggiuntive per scacchi lato client
 
  */
+
+
+
+
+
+
+
+
 export function createChessboard (game,gameClientInfo) {
         let board = document.getElementById("chessboard");
         for(let i = 0;i<game.height;++i){
@@ -279,8 +287,8 @@ function dragElement(element, game, gameClientInfo) {
         //oppure anche se semplicemente non posso muovere quel pezzo
         if (result == 0 || isOnSameStart) {
             //se non puoi muoverti ti riporto alla posizione iniziale
-            gameClientInfo.info.element.style.left = gameClientInfo.info.x;
-            gameClientInfo.info.element.style.top = gameClientInfo.info.y;
+            gameClientInfo.info.element.style.left = "calc(var(--sizeCella) *" +startFormatX +")";
+            gameClientInfo.info.element.style.top = "calc(var(--sizeCella) *" +startFormatY + ")";;
             document.getElementById("chessboard").classList.add("cursor-pointer");
 
             //con questo parametro capisco se tu hai draggato il pezzo o hai cliccato per mangiare
@@ -370,7 +378,6 @@ export function updateEatenPieces(eatenPieces,color,positions,style) {
     }
     else if(collection.length > 0 && currentIndex != eatenPieces.length-1)
         collection.forEach((piece,index)=>{
-            console.log(eatenPieces[index]);
             if(index == currentIndex){
                     container.insertBefore(img, collection.item(index+1));
                 return;
@@ -880,7 +887,6 @@ export function goForwardMove(game,gameClientInfo) {
         let value = mossa.pieceEaten.value;
         let array = gameClientInfo.eatenPieces[color];
         array.push([name, value]);
-        console.log(array);
         updateEatenPieces(array, color, gameClientInfo.positions, gameClientInfo.chessboardStyle);
         updateScore(gameClientInfo.eatenPieces, gameClientInfo.positions);
 

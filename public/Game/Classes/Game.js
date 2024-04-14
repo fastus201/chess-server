@@ -83,7 +83,6 @@ export default class Game {
             for (let i = this.width - 1; i >= 0; --i)
                 newArray.push(originalBoard[i]);
             originalBoard = newArray;
-            console.log(originalBoard);
         }
         let uniqeids = 1;
         for (let i = 0; i < this.#height; ++i) {

@@ -17,7 +17,7 @@ const measures = {
     sizeCella: 100,
     transition_time: 225
 }
-const chessboardStyle =0;  //default value = 0
+let chessboardStyle = 0;  //default value = 0
 
 /**
  * @typedef {{myName:String,myColor:String,stopped:Boolean,ended:Boolean,modalOpen:Boolean,showPossibleMoves:Boolean,measures:{width:Number,height:Number,sizeCella:Number,transition_time:Number},info:{x:String,y:String,element:HTMLElement},currentSelectedSquare:[[Number],[Number]],currentMossa:Number,positions:{white:Number,black:Number},chessboardStyle:{value:Number,format:String},eatenPieces:{white:Array,black:Array},piecesValue:{String}}} ClientGame Contiene le informazioni aggiuntive per scacchi lato client
@@ -33,17 +33,31 @@ socket.on("gameStarting", (/**@type {{noplayer:true|undefined,opponent:String,co
 
 window.onload = () =>{
     document.getElementById("start-game-btn").addEventListener("click",lookForGame);
+    document.getElementById("change-btn").addEventListener("click",changeStyle);
+    setUpStyle(-1);
+
 }
 //Funzione per cercare una  partita
 function lookForGame() {
     //get my nickname
     myNickname = document.getElementById("nickname").value;
+    if(myNickname == "")
+        return;
 
+    document.getElementById("btn-text").style.display = "none";
+    document.getElementById("spinner").style.display = "inline-block";
+    document.getElementById("nickname").setAttribute("disabled",true);
+    this.setAttribute("disabled",true);
     socket.emit("lookForGame", myNickname, (/**@type {{noplayer:true|undefined,opponent:String,color:String,settings:{width:Number,height:Number,mode:Number}}}*/response)=>{
         if(!response.noplayer)  //if i have found a game
             setGame(myNickname,response.opponent,response.settings,response.color);
         //if not i just wait for another player
     });
+}
+
+function changeStyle() {
+    chessboardStyle = !chessboardStyle | 0;
+    setUpStyle(-1);
 }
 
 /**
@@ -113,6 +127,42 @@ function setGame(me,opponent,options,color) {
     document.getElementById("main-content").style.display = "none";
 
 
+    //To adjust game sizes
+    window.onresize = adjustMeasure;
+    adjustMeasure();
+
+    function adjustMeasure() {
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+
+
+        let maxWidth = gameClientInfo.measures.sizeCella * gameClientInfo.measures.width;
+        
+        while (maxWidth >= width - 30) {
+            gameClientInfo.measures.sizeCella --;
+            maxWidth = gameClientInfo.measures.sizeCella * gameClientInfo.measures.width;
+        }
+        while (maxWidth <= width - 30 && width < 800) {
+            gameClientInfo.measures.sizeCella++;
+            maxWidth = gameClientInfo.measures.sizeCella * gameClientInfo.measures.width;
+        }
+        let maxHeight = gameClientInfo.measures.sizeCella * gameClientInfo.measures.height;
+        while (maxHeight >= height - 125) {
+            gameClientInfo.measures.sizeCella --;
+            maxHeight = gameClientInfo.measures.sizeCella * gameClientInfo.measures.height;
+        }
+        while (maxHeight <= height - 125 && height < 675) {
+            gameClientInfo.measures.sizeCella++;
+            maxHeight = gameClientInfo.measures.sizeCella * gameClientInfo.measures.height;
+        }
+        
+        
+        
+    
+        document.querySelector(":root").style.setProperty("--sizeCella", gameClientInfo.measures.sizeCella + "px");
+    }
+
+
     //Called when your enemy moves a piece
     socket.on("movePieceFromServer", (data) => {
         //It means that you are looking at old Moves
@@ -127,8 +177,6 @@ function setGame(me,opponent,options,color) {
         gameClientInfo.currentSelectedSquare.push([data.x,data.y]);
         setElementBackground(data.x,data.y,0);
 
-        if(data.move.upgrade)
-            console.log(data);
         if(data.eat){
             analysePieceEat(data.x,data.y,data.move,game,gameClientInfo,"Server");
             setTimeout(eatPiece, gameClientInfo.measures.transition_time - 25, document.getElementById("ped"+data.move.y+"."+data.move.x), gameClientInfo);
@@ -151,8 +199,8 @@ function setGame(me,opponent,options,color) {
 
 
     socket.on("disconnect", () => {
-        console.log(game,gameClientInfo);
-        console.log("TI SEI DISCONNESSO");
+        gameClientInfo.ended = true;
+        showEndGame(["yourDisconnect",gameClientInfo.myName],gameClientInfo);
     })
 
 
@@ -178,16 +226,22 @@ export function showEndGame(reasons,gameClientInfo,color){
                 document.getElementById("all-modal-content").style.backgroundColor = "var(--color2)";
                 mainString = "You won!";
             }
-            document.getElementById("endGame-reason").innerText = "Checkmate"
+            document.getElementById("endGame-reason").innerText = "Checkmate";
         }
         else if(reasons[0] == "draw"){
             document.getElementById("endGame-reason").innerText = reasons[1];
             document.getElementById("all-modal-content").style.backgroundColor = "var(--color1)";
         }//If someone disconnects
-        else{
+        else if(reasons[0] == "yourDisconecct"){
             mainString = "You won!";
             document.getElementById("all-modal-content").style.backgroundColor = "var(--color2)";
-            document.getElementById("endGame-reason").innerHTML = "<i>"+reasons[1]+"</i>" + " disconnects"
+            document.getElementById("endGame-reason").innerHTML = "<i>" + reasons[1] + "</i>" + " disconnects";
+        }
+        else{
+            let color = (gameClientInfo.myColor == "white" ? "black" : "white");
+            mainString = color.charAt(0).toUpperCase() + color.slice(1) + " has won!";
+            document.getElementById("all-modal-content").style.backgroundColor = "var(--color1)";
+            document.getElementById("endGame-reason").innerHTML = "You have been disconnected from the game!";
         }
         document.getElementById("main-result").innerText = mainString;
         myModal.show();
@@ -205,12 +259,12 @@ function setUpStyle(measures) {
     const secondColors = ["#779954", "#dbe3ad"];
     const lightColors = ["#F5F682", "#b08912"]
     const darkColors = ["#B9CA43", "#dcbe6a"];
-
-    document.querySelector(":root").style.setProperty("--height", measures.height);
-    document.querySelector(":root").style.setProperty("--width", measures.width);
-    document.querySelector(":root").style.setProperty("--sizeCella", measures.sizeCella + "px");
-    document.querySelector(":root").style.setProperty("--delay", measures.transition_time / 1000 + "s");
-
+    if(measures != -1){
+        document.querySelector(":root").style.setProperty("--height", measures.height);
+        document.querySelector(":root").style.setProperty("--width", measures.width);
+        document.querySelector(":root").style.setProperty("--sizeCella", measures.sizeCella + "px");
+        document.querySelector(":root").style.setProperty("--delay", measures.transition_time / 1000 + "s");
+    }
     //imposto i colori
     document.querySelector(":root").style.setProperty("--color1", firstColors[chessboardStyle]);
     document.querySelector(":root").style.setProperty("--color2", secondColors[chessboardStyle]);

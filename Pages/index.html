@@ -15,16 +15,28 @@
 
 
 
-    <script src="../public/Lobby/index.js" type="module"></script>
+    <script src="../public/Lobby/index.js" type="module" defer></script>
 
 </head>
 <body>
     <div id="main-content">
-        <label>Inserisci il tuo nickname:</label>
-        <input type="text" id="nickname">
-        <button id="start-game-btn">
-            Cerca partita
-        </button>
+        <div class="row g-3 align-items-center justify-content-center">
+            <div class="col-auto" style="width: 100%;">
+                <input type="text" id="nickname" class="form-control form-control-lg" placeholder="Nickname">
+            </div>
+            <div id="btn-group">
+                <button id="start-game-btn" class="btn btn-primary" style="width: 50%;font-size: inherit;">
+                    <span id="btn-text">Search game</span>
+                    <div class="spinner-border spinner-border-md" role="status" id="spinner">
+                    </div>
+                </button>
+                <button class="btn btn-success" style="font-size: inherit;" id="change-btn">
+                    Change style
+                </button>
+            </div>
+        </div>
+
+
     </div>
 
 

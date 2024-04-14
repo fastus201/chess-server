@@ -170,7 +170,6 @@ async function computeUpgrade(startX,startY,endX,endY,move,game,gameClientInfo,f
         let pawn = document.getElementById("ped" + startY + "." + startX);
         animateMovePiece(endX, endY, pawn, "move", gameClientInfo);
         let color = game.chessboard[startY][startX].color;
-        console.log(pieceToDelete);
         setTimeout(() => {
             pawn.remove();
             createUpgradePiece(move.x, color, pieceChosen, gameClientInfo, game);
