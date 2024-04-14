@@ -1,6 +1,6 @@
 import {isMyTurn,checkForPossibleMove} from "./clientGameLogic.js"
 
-import { ClientGame } from "../Lobby/index.js";
+import { ClientGame, showEndGame,myModal } from "../Lobby/index.js";
 
 /**
  * @description Funzione che crea la scacchiera in html
@@ -62,7 +62,7 @@ export function createChessboard (game,gameClientInfo) {
             }
             
         }
-    }
+}
 
 
 /**
@@ -76,6 +76,9 @@ export function drawPieces(game, gameClientInfo) {
         for (let j = 0; j < game.width; ++j) {
             if (game.chessboard[i][j] != 0) {
                 let div = createPiece(j, i, game.chessboard[i][j].name, game.chessboard[i][j].color,gameClientInfo.piecesValue,gameClientInfo.chessboardStyle);
+                //If i found enemy pieces
+                if(gameClientInfo.myColor != game.chessboard[i][j].color)
+                    div.style.cursor = "default";
                 dragElement(div, game, gameClientInfo);
             }
         }
@@ -147,14 +150,14 @@ function dragElement(element, game, gameClientInfo) {
         //allora, prima controllo che non sto muovendo per MANGIARE
         //element contiene l'elemento CHE HAI CLICCATO ADESSO
         //info.element quello di prima
-        if (!gameClientInfo.stopped && gameClientInfo.info.element != undefined && gameClientInfo.info.element.getAttribute("color") != element.getAttribute("color")) {
+        if ( !gameClientInfo.stopped && gameClientInfo.info.element != undefined && gameClientInfo.info.element.getAttribute("color") != element.getAttribute("color")) {
             //è come se lasciassi il pezzo in quel punto
             closeDragElement("move");
             return;
         }
         //dopo che ho controllato se dovevo mangiare, controllo i turni
         //se non è il mio turno annullo tutto oppure se la partita è bloccata
-        if (gameClientInfo.stopped || element.getAttribute("disabled") || !isMyTurn(this.getAttribute("color"), game.turno, gameClientInfo.currentMossa) || gameClientInfo.myColor != this.getAttribute("color")) {
+        if (gameClientInfo.ended || gameClientInfo.stopped || element.getAttribute("disabled") || !isMyTurn(this.getAttribute("color"), game.turno, gameClientInfo.currentMossa) || gameClientInfo.myColor != this.getAttribute("color")) {
             document.onmouseup = null;
             document.onmousemove = null;
             return;
@@ -587,11 +590,13 @@ export function checkAfterMove(results, endY, endX, game,gameClientInfo) {
         setColorKing((game.chessboard[endY][endX].color == "black" ? "white" : "black"), "set", gameClientInfo);
     }
     else if (mainResult == "checkmate") {
-        alert("matto");
+        gameClientInfo.ended = true;
+        showEndGame(results, gameClientInfo, game.chessboard[endY][endX].color);
         return;
     }
     else if (mainResult == "draw") {
-        alert("patta " + results[1]);
+        gameClientInfo.ended = true;
+        showEndGame(results, gameClientInfo,game.chessboard[endY][endX].color);
         return;
     }
     //se non è scacco
@@ -737,11 +742,19 @@ export function handleKeyPress(game, gameClientInfo, event) {
     //mostra la mossa precedente
     //(currentMossa) contiene la mossa a cui sono arrivato
     if (keyPressed == "Enter")
-        console.log(game);
+        console.log(gameClientInfo);
     if (keyPressed == "ArrowLeft") {
+        if (gameClientInfo.modalOpen){ 
+            myModal.hide();
+            gameClientInfo.modalOpen = false;
+        }
         goBackMove(game,gameClientInfo);
-    }
+    } 
     else if (keyPressed == "ArrowRight") {
+        if (gameClientInfo.modalOpen) {
+            myModal.hide();
+            gameClientInfo.modalOpen = false;
+        }
         goForwardMove(game,gameClientInfo);
     }
 }
@@ -880,9 +893,14 @@ export function goForwardMove(game,gameClientInfo) {
         setColorKing("dsaasd", "remove", gameClientInfo);
     }
     --gameClientInfo.currentMossa;
-    if (gameClientInfo.currentMossa == 0)
+    if (gameClientInfo.currentMossa == 0){
         document.getElementById("chessboard").classList.remove("obfuscated");
-
+        
+        //Se questa mossa ha cusato la fine della partita
+        if(gameClientInfo.ended){
+            showEndGame([mossa.causes,mossa.extraCauses],gameClientInfo,mossa.piece.color);
+        }
+    }
 }
 
 

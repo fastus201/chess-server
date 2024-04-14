@@ -84,7 +84,7 @@ export default class Pawn extends Piece{
                     //ora controllo che posso MUOVERMI in questo punto e che non ci sia niente
                     if(board[newY] != undefined && board[newY][newX] != undefined){
                         if(board[newY][newX] == 0){
-                            if(! (this.color == "white" && this.movePattern[i][j] == 2 && board[newY+1][newX] != 0)){
+                            if(! (this.positions[this.color] == "down" && this.movePattern[i][j] == 2 && board[newY+1][newX] != 0)){
                                 //controllo per l'upgrade, devo tenere conto del colore e della posizione dei pezzi nella scacchiera
                                 if (newY == (this.positions[this.color] == "down" ? 0 : board.length - 1)){
                                     result.push({ x: newX, y: newY,upgrade: true});

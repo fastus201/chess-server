@@ -210,7 +210,7 @@ export default class Game {
         if (this.canOtherPiecesMove(pedina.color)) {
             if (!isScacco) {
                 mossa.causes = "draw";
-                mossa.extraCauses = "stealmate";
+                mossa.extraCauses = "Stalemate";
             }
             else {
                 mossa.winner = ["white", "black"][this.turno];
@@ -228,7 +228,7 @@ export default class Game {
         //se entrambi i giocatori hanno materiale insufficente
         if (whiteResult && blackResult) {
             mossa.causes = "draw";
-            mossa.extraCauses = "insufficient_material"
+            mossa.extraCauses = "Insufficient material"
             return;
         }
         //la partita potrebbe finire anche quando si verificano 50 mosse di fila senza mangiare o senza movimenti di pedoni
@@ -252,7 +252,7 @@ export default class Game {
             //result = 3 -> ci sono state 50 mosse di fila senza mosse utili
             if (result) {
                 mossa.causes = "draw";
-                mossa.extraCauses = "50moves";
+                mossa.extraCauses = "50 move-rule";
                 return;
             }
         }
@@ -305,7 +305,7 @@ export default class Game {
             }
             if (draw) {
                 mossa.causes = "draw";
-                mossa.extraCauses = "repetition";
+                mossa.extraCauses = "Repetition";
             }
         }
 

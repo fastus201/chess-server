@@ -9,10 +9,6 @@ const io = new Server(server);
 
 const __dirname = process.cwd();
 
-//Class Game that represents the chess game 
-
-import Game from "./public/Game/Classes/Game.js";
-import Piece from "./public/Game/Classes/Pieces/Piece.js";
 /**
  * @description Person who is looking for a match
  * @type {{player:String,socketId:String,matchId:String}}
@@ -20,7 +16,7 @@ import Piece from "./public/Game/Classes/Pieces/Piece.js";
 const possiblePerson = {}; 
 /**
  * @description Array with the actual match being played
- * @type {Game[]} 
+ * @type {{"gameId":String}[]} 
  */
 const currentGames = [];
 
@@ -49,6 +45,9 @@ io.on("connection",(socket)=>{
         let id = socket.id;
         if(possiblePerson.socketId == id)   //If you were the person who was looking for a game
             deletePossiblePerson();
+        let room = Array.from(socket.rooms)[1];
+        deleteRoom(room);
+        socket.to(room).emit("winForDisconnection");
     });
 
     //when a user is looking for a game
@@ -94,7 +93,7 @@ io.on("connection",(socket)=>{
 
     
     socket.on("movePiece", (/**
-     *@type {{x:Number,y:Number,move:{x:Number,y:Number,castle:Boolean | undefined,rook:{x:Number,y:Number,endX:Number}|undefined,enPassantPiece:{x:Number,y:Number} | undefined,upgrade:Boolean | undefined},causes:String,eat:Boolean}} Contains all info about chess move
+     *@type {{x:Number,y:Number,move:{x:Number,y:Number,castle:Boolean | undefined,rook:{x:Number,y:Number,endX:Number}|undefined,enPassantPiece:{x:Number,y:Number} | undefined,upgrade:Boolean | undefined},causes:String[],eat:Boolean}} Contains all info about chess move
      */data)=>{
         let room = Array.from(socket.rooms)[1];
         //I have to reverse every y coords present (The chessboard is reserved in every player!!)
@@ -113,8 +112,32 @@ io.on("connection",(socket)=>{
 
         }
         socket.to(room).emit("movePieceFromServer",data);
+        //If the game has ended in some way
+        if(data.causes[0] == "checkmate" || data.causes[0] == "draw"){
+            deleteRoom(room);   //remove socket from the room
+            socket.leave(room); //Remove socket from the room
+        }
     });
+    /**
+     * @description Function that given a room code, returns index in currentGames
+     * @param {String} room 
+     * @returns {Number} Indice nel vettore dove ti trovi
+     */
+    function getIndex(room) {
+        for (let i = 0; i < currentGames.length; ++i)
+            if (currentGames[i].gameId == room) {
+                return i;
+            }
+    }
+    /**
+     * @description Function that given a room code, delete that in the array
+     * @param {String} room
+     */
+    function deleteRoom(room) {
+        //Delete element in array
+        currentGames.splice(getIndex(room),1);
 
+    }
     /**
      * @description Delete possiblePerson information
      */

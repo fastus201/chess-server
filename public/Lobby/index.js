@@ -5,6 +5,10 @@ import { analysePieceMove, analysePieceEat } from "../Game/clientGameLogic.js"
 
 import Game from "../Game/Classes/Game.js";
 
+export let myModal = new bootstrap.Modal(document.getElementById('endModal'), {});
+
+
+
 const socket = io();
 let myNickname;
 
@@ -13,10 +17,10 @@ const measures = {
     sizeCella: 100,
     transition_time: 225
 }
-const chessboardStyle = 0;  //default value
+const chessboardStyle =0;  //default value = 0
 
 /**
- * @typedef {{myColor:String,measures:{width:Number,height:Number,sizeCella:Number,transition_time:Number},info:{x:String,y:String,element:HTMLElement},currentSelectedSquare:[[Number],[Number]],currentMossa:Number,positions:{white:Number,black:Number},chessboardStyle:{value:Number,format:String},eatenPieces:{white:Array,black:Array},piecesValue:{String}}} ClientGame Contiene le informazioni aggiuntive per scacchi lato client
+ * @typedef {{myName:String,myColor:String,stopped:Boolean,ended:Boolean,modalOpen:Boolean,measures:{width:Number,height:Number,sizeCella:Number,transition_time:Number},info:{x:String,y:String,element:HTMLElement},currentSelectedSquare:[[Number],[Number]],currentMossa:Number,positions:{white:Number,black:Number},chessboardStyle:{value:Number,format:String},eatenPieces:{white:Array,black:Array},piecesValue:{String}}} ClientGame Contiene le informazioni aggiuntive per scacchi lato client
  */
 export const ClientGame = {};
 
@@ -24,6 +28,7 @@ export const ClientGame = {};
 socket.on("gameStarting", (/**@type {{noplayer:true|undefined,opponent:String,color:String}}*/response)=>{
     setGame(myNickname, response.opponent, response.settings, response.color);
 });
+
 
 
 
@@ -52,7 +57,11 @@ function lookForGame() {
 function setGame(me,opponent,options,color) {
     //First, based on my options and color i create a client object that helps me
     let gameClientInfo = {
+        myName:myNickname,
         myColor:color,  //Save my color (So i know which pieces i can move)
+        stopped: false,
+        ended: false,
+        modalOpen:false,
         measures: {
             width:options.width,
             height:options.height,
@@ -125,7 +134,57 @@ function setGame(me,opponent,options,color) {
         
         animateMovePiece(data.move.x, data.move.y, document.getElementById("ped"+data.y+"."+data.x), "move", gameClientInfo);
     });
+
+
+    socket.on("winForDisconnection",()=>{
+        
+        gameClientInfo.ended = true;
+        showEndGame(["disconnection",opponent],gameClientInfo,gameClientInfo.myColor);
+    });
+
 }
+
+/**
+ * @description Function called to show end game graphics
+ * @param {String[]} reasons How game ended
+ * @param {ClientGame} gameClientInfo Client information about game
+ * @param {String} color Color of the winner of the game
+ */
+export function showEndGame(reasons,gameClientInfo,color){
+    setTimeout(() => {
+        let mainString = "Draw";
+        if(reasons[0] == "checkmate"){
+            //vedo se sei il vincitore
+            let winner = color == gameClientInfo.myColor;
+            if(!winner){
+                mainString = color.charAt(0).toUpperCase()+color.slice(1) + " has won!";
+                document.getElementById("all-modal-content").style.backgroundColor = "var(--color1)";
+            }
+            else{
+                document.getElementById("all-modal-content").style.backgroundColor = "var(--color2)";
+                mainString = "You won!";
+            }
+            document.getElementById("endGame-reason").innerText = "Checkmate"
+        }
+        else if(reasons[0] == "draw"){
+            document.getElementById("endGame-reason").innerText = reasons[1];
+            document.getElementById("all-modal-content").style.backgroundColor = "var(--color1)";
+        }//If someone disconnects
+        else{
+            mainString = "You won!";
+            document.getElementById("all-modal-content").style.backgroundColor = "var(--color2)";
+            document.getElementById("endGame-reason").innerHTML = "<i>"+reasons[1]+"</i>" + " disconnects"
+        }
+        document.getElementById("main-result").innerText = mainString;
+        myModal.show();
+        gameClientInfo.modalOpen = true;
+
+
+
+    }, gameClientInfo.measures.transition_time+50);
+}
+
+
 
 function setUpStyle(measures) {
     const firstColors = ["#EBECD0", "#84774f"];

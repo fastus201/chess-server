@@ -200,3 +200,14 @@ body{
     font-size: var(--fontSize);
     color: black;
 }
+
+
+/*Modal*/
+
+#all-modal-content{
+    border: none !important;
+}
+
+#main-result{
+    font-size: 25px;
+}

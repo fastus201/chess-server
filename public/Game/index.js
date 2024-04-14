@@ -10,6 +10,7 @@ const measures = {
     transition_time:225
 }
 const chessboardStyle = 1;
+
 const firstColors = ["#EBECD0","#84774f"];
 const secondColors = ["#779954","#dbe3ad"];
 const lightColors = ["#F5F682","#b08912"]
