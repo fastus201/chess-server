@@ -40,12 +40,8 @@ export function createChessboard (game,gameClientInfo) {
                         text.style.setProperty("--y", i);
                         text.classList.add("transformed-text");
                         text.style.color = "var(--color"+ ( (j % 2) + 1)+")";
-                        //If white is down, i have to reverse letter order
-                        if (gameClientInfo.positions.white == "down") 
                             text.style.setProperty("--value", JSON.stringify(["a","b","c","d","e","f", "g", "h"][j]));
                         
-                        else
-                            text.style.setProperty("--value",JSON.stringify(["h","g","f","e","d","c","b","a"][j]));
                         board.append(text);
                     }
                 }
@@ -105,6 +101,11 @@ export function createPiece(x, y, name, color,piecesValue,style) {
     div.setAttribute("name",name);
     div.setAttribute("value", piecesValue[name])
     div.setAttribute("src", "./public/Game/img/Piece/" + color + style.value+"/" + name + style.format);
+
+    div.addEventListener("contextmenu",()=>{
+        console.log("CLICCHI CON IL TASTO DESTRO!!!");
+    })
+    
     if (name == "King") {
         div.classList.add("King-" + color);
     }
@@ -126,9 +127,7 @@ function dragElement(element, game, gameClientInfo) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     let currentSelected;    //questa variabile la uso solo per draggare il pezzo
 
-
     element.onmousedown = dragMouseDown;
-
     /**
      * @description Funzione che viene chiamata appena clicchi col mouse sul pezzo
      * @param {Event} e Evento del mouse 
@@ -136,6 +135,9 @@ function dragElement(element, game, gameClientInfo) {
     function dragMouseDown(e) {
         e = e || window.event;
         e.preventDefault();
+        //If you're not using left click mouse
+        if (e.button != 0)
+            return;
         // get the mouse cursor position at startup:
         pos3 = e.clientX;
         pos4 = e.clientY;
@@ -145,7 +147,7 @@ function dragElement(element, game, gameClientInfo) {
         //calcolo le coordinate belle di dove sono
         let [currentX, currentY] = getCoordinates(element, gameClientInfo.measures.sizeCella);
 
-
+      
 
         //allora, prima controllo che non sto muovendo per MANGIARE
         //element contiene l'elemento CHE HAI CLICCATO ADESSO
@@ -157,10 +159,14 @@ function dragElement(element, game, gameClientInfo) {
         }
         //dopo che ho controllato se dovevo mangiare, controllo i turni
         //se non è il mio turno annullo tutto oppure se la partita è bloccata
-        if (gameClientInfo.ended || gameClientInfo.stopped || element.getAttribute("disabled") || !isMyTurn(this.getAttribute("color"), game.turno, gameClientInfo.currentMossa) || gameClientInfo.myColor != this.getAttribute("color")) {
+        if (gameClientInfo.ended || gameClientInfo.stopped || element.getAttribute("disabled")  /**/ || gameClientInfo.myColor != this.getAttribute("color")) {
             document.onmouseup = null;
             document.onmousemove = null;
             return;
+        }
+        //Anche se non è il tuo turno, puoi vedere dove potresti muoverti
+        if (!isMyTurn(this.getAttribute("color"), game.turno, gameClientInfo.currentMossa)){
+            gameClientInfo.showPossibleMoves = true;
         }
 
 
@@ -169,15 +175,23 @@ function dragElement(element, game, gameClientInfo) {
         gameClientInfo.info.y = getComputedStyle(element).getPropertyValue("top");
         gameClientInfo.info.element = element;
         //se c'è solo un elemento selezionato lo tolgo
-        if (gameClientInfo.currentSelectedSquare.length == 1 || gameClientInfo.currentSelectedSquare.length == 3) {
+        if (gameClientInfo.currentSelectedSquare.length == 1 || gameClientInfo.currentSelectedSquare.length == 3 ) {
             setElementBackground(gameClientInfo.currentSelectedSquare[gameClientInfo.currentSelectedSquare.length - 1][0], gameClientInfo.currentSelectedSquare[gameClientInfo.currentSelectedSquare.length - 1][1], 1);
             gameClientInfo.currentSelectedSquare.pop();
         }
-        //aggiungo lo sfondo dove sono,
-        gameClientInfo.currentSelectedSquare.push([currentX, currentY]);
-        setElementBackground(currentX, currentY, 0);
-
-
+        let addBackgrund = true;
+        if (gameClientInfo.showPossibleMoves) {
+            let moves = gameClientInfo.currentSelectedSquare;
+            if (moves.length == 2) {
+                if (moves[1][0] == currentX && moves[1][1] == currentY) {
+                    addBackgrund = false;
+                }
+            }
+        }
+        if(addBackgrund){
+            gameClientInfo.currentSelectedSquare.push([currentX, currentY]);
+            setElementBackground(currentX, currentY, 0);
+        }
         //modifico la cella corrente
         currentSelected = document.getElementById("pos" + currentY + "." + currentX);   //aggiorni la casa corrente
 
@@ -258,7 +272,7 @@ function dragElement(element, game, gameClientInfo) {
         //tolgo il fatto che la pedina sia "sopra" le altre
         element.classList.remove("z-index");
         //vediamo se sei sulla stessa casella
-        let isOnSameStart = (currentX == startFormatX && currentY == startFormatY);
+        let isOnSameStart = (currentX == startFormatX && currentY == startFormatY) || gameClientInfo.showPossibleMoves;
         let result;
         if (!isOnSameStart) {
             result = await checkForPossibleMove(parseInt(currentX), parseInt(currentY), game, gameClientInfo); //controlla se puoi muove li la pedina
@@ -406,19 +420,31 @@ export function updateScore(eatenPieces,positions) {
 
  */
 export async function movePieceOnBoard(game, gameClientInfo) {
-    if (JSON.stringify(gameClientInfo.info) == "{}")
+    if (JSON.stringify(gameClientInfo.info) == "{}" )
         return;
     let coord = this.id.split("pos")[1].split(".");   //ricavo le coordinate di dove ho cliccato
     let result = await checkForPossibleMove(parseInt(coord[1]), parseInt(coord[0]), game, gameClientInfo); //controlla se puoi muove li la pedina;
     if (result == 1) {
-        animateMovePiece(coord[1], coord[0], gameClientInfo.info.element, "move", gameClientInfo);
+        if(!gameClientInfo.showPossibleMoves)
+            animateMovePiece(coord[1], coord[0], gameClientInfo.info.element, "move", gameClientInfo);
         return;
     }
     //se arrivi qui vuol dire che hai CLICCATO su un punto della scacchiera dove non puoi muovere
+    let can = true;
+    //Se non è il tuo turno ma stai comunque visualizzando le possibili mosse da fare, non ti permetto di togliere i background già esistenti
+    if(gameClientInfo.showPossibleMoves){
+        let x = gameClientInfo.info.x.split("px")[0] / gameClientInfo.measures.sizeCella;
+        let y = gameClientInfo.info.y.split("px")[0] / gameClientInfo.measures.sizeCella;
 
-    setElementBackground(gameClientInfo.info.x.split("px")[0] / gameClientInfo.measures.sizeCella, gameClientInfo.info.y.split("px")[0] / gameClientInfo.measures.sizeCella, 1);
-    gameClientInfo.currentSelectedSquare.pop();
+        if (gameClientInfo.currentSelectedSquare.length > 1 && gameClientInfo.currentSelectedSquare[1][0] == x && gameClientInfo.currentSelectedSquare[1][1] == y)
+            can = false;
+    }   
+    if(can){
+        setElementBackground(gameClientInfo.info.x.split("px")[0] / gameClientInfo.measures.sizeCella, gameClientInfo.info.y.split("px")[0] / gameClientInfo.measures.sizeCella, 1);
+        gameClientInfo.currentSelectedSquare.pop();
+    }
     Object.keys(gameClientInfo.info).forEach(key => delete gameClientInfo.info[key]);
+
     removePossibleMoves();
     document.getElementById("chessboard").classList.remove("cursor-pointer");
 }
@@ -542,15 +568,15 @@ export function setElementBackground(x, y, remove) {
     x = parseInt(x);
     if (!remove) {
         if ((y + x) % 2 == 0)
-            document.getElementById("pos" + y + "." + x).classList.add("selected-light");
+            document.getElementById("pos" + y + "." + x).classList.add("selected-light","selected");
         else
-            document.getElementById("pos" + y + "." + x).classList.add("selected-dark");
+            document.getElementById("pos" + y + "." + x).classList.add("selected-dark","selected");
     }
     else {
         if ((y + x) % 2 == 0)
-            document.getElementById("pos" + y + "." + x).classList.remove("selected-light");
+            document.getElementById("pos" + y + "." + x).classList.remove("selected-light","selected");
         else
-            document.getElementById("pos" + y + "." + x).classList.remove("selected-dark");
+            document.getElementById("pos" + y + "." + x).classList.remove("selected-dark","selected");
     }
 }
 
@@ -675,6 +701,8 @@ export function createUpgradePiece(x,color,pieceChosen,gameClientInfo,game) {
     let y = (gameClientInfo.positions[color] == "down" ? 0 : gameClientInfo.measures.height - 1);
     //dopo che scelgo il pezzo, credo il div di quest'ultimo
     let div = createPiece(x, y, pieceChosen, color, gameClientInfo.piecesValue, gameClientInfo.chessboardStyle);
+    if (gameClientInfo.myColor != color)
+        div.style.cursor = "default";
     dragElement(div, game, gameClientInfo);
 
     //aggiungo il pezzo che creo come se lo avessi mangiato in modo da aggiornare correttamente i punti

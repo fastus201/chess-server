@@ -1,6 +1,6 @@
 import { io } from "https://cdn.socket.io/4.7.5/socket.io.esm.min.js";
 
-import { createChessboard, drawPieces, handleKeyPress,animateMovePiece, setElementBackground, eatPiece,goForwardMove } from "../Game/graphic.js";
+import { createChessboard, drawPieces, handleKeyPress,animateMovePiece, setElementBackground, eatPiece,goForwardMove, showPossibleMoves } from "../Game/graphic.js";
 import { analysePieceMove, analysePieceEat } from "../Game/clientGameLogic.js"
 
 import Game from "../Game/Classes/Game.js";
@@ -20,7 +20,7 @@ const measures = {
 const chessboardStyle =0;  //default value = 0
 
 /**
- * @typedef {{myName:String,myColor:String,stopped:Boolean,ended:Boolean,modalOpen:Boolean,measures:{width:Number,height:Number,sizeCella:Number,transition_time:Number},info:{x:String,y:String,element:HTMLElement},currentSelectedSquare:[[Number],[Number]],currentMossa:Number,positions:{white:Number,black:Number},chessboardStyle:{value:Number,format:String},eatenPieces:{white:Array,black:Array},piecesValue:{String}}} ClientGame Contiene le informazioni aggiuntive per scacchi lato client
+ * @typedef {{myName:String,myColor:String,stopped:Boolean,ended:Boolean,modalOpen:Boolean,showPossibleMoves:Boolean,measures:{width:Number,height:Number,sizeCella:Number,transition_time:Number},info:{x:String,y:String,element:HTMLElement},currentSelectedSquare:[[Number],[Number]],currentMossa:Number,positions:{white:Number,black:Number},chessboardStyle:{value:Number,format:String},eatenPieces:{white:Array,black:Array},piecesValue:{String}}} ClientGame Contiene le informazioni aggiuntive per scacchi lato client
  */
 export const ClientGame = {};
 
@@ -28,7 +28,6 @@ export const ClientGame = {};
 socket.on("gameStarting", (/**@type {{noplayer:true|undefined,opponent:String,color:String}}*/response)=>{
     setGame(myNickname, response.opponent, response.settings, response.color);
 });
-
 
 
 
@@ -62,6 +61,7 @@ function setGame(me,opponent,options,color) {
         stopped: false,
         ended: false,
         modalOpen:false,
+        showPossibleMoves:false,
         measures: {
             width:options.width,
             height:options.height,
@@ -119,6 +119,11 @@ function setGame(me,opponent,options,color) {
         while(gameClientInfo.currentMossa != 0)
             goForwardMove(game,gameClientInfo);
         //Add colored square
+        //If one square is already colored, delete it, if 3 are, delete the last one
+        if (gameClientInfo.currentSelectedSquare.length == 1 || gameClientInfo.currentSelectedSquare.length == 3) {
+            setElementBackground(gameClientInfo.currentSelectedSquare[gameClientInfo.currentSelectedSquare.length - 1][0], gameClientInfo.currentSelectedSquare[gameClientInfo.currentSelectedSquare.length - 1][1], 1);
+            gameClientInfo.currentSelectedSquare.pop();
+        }
         gameClientInfo.currentSelectedSquare.push([data.x,data.y]);
         setElementBackground(data.x,data.y,0);
 
@@ -133,6 +138,8 @@ function setGame(me,opponent,options,color) {
             analysePieceMove(data.x,data.y,data.move,game,gameClientInfo,"Server");
         
         animateMovePiece(data.move.x, data.move.y, document.getElementById("ped"+data.y+"."+data.x), "move", gameClientInfo);
+        if(gameClientInfo.showPossibleMoves)
+            gameClientInfo.showPossibleMoves = false;
     });
 
 
@@ -141,6 +148,13 @@ function setGame(me,opponent,options,color) {
         gameClientInfo.ended = true;
         showEndGame(["disconnection",opponent],gameClientInfo,gameClientInfo.myColor);
     });
+
+
+    socket.on("disconnect", () => {
+        console.log(game,gameClientInfo);
+        console.log("TI SEI DISCONNESSO");
+    })
+
 
 }
 

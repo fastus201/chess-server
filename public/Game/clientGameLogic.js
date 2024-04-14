@@ -56,10 +56,11 @@ export async function checkForPossibleMove(endX, endY, game, gameClientInfo) {
         if (move.x == endX && move.y == endY) {
             //se il campo è vuoto, ti sposti normalmente
             if (game.chessboard[endY][endX] == 0) {
-
-                let endResult = await analysePieceMove(startX,startY,move,game,gameClientInfo);
-                //i also have to tell to the server the move that i have done
-                movePieceToServer(startX,startY,move, endResult,false);
+                if(!gameClientInfo.showPossibleMoves){
+                    let endResult = await analysePieceMove(startX,startY,move,game,gameClientInfo);
+                    //i also have to tell to the server the move that i have done (only if it is your turn)
+                    movePieceToServer(startX,startY,move, endResult,false);
+                }
                 return new Promise(resolve => resolve(1));
 
             }
@@ -69,10 +70,11 @@ export async function checkForPossibleMove(endX, endY, game, gameClientInfo) {
     //per le mosse di mangiata
     for (let eat of allPossibleEats) {
         if (eat.x == endX && eat.y == endY) {
-            let endResult = await analysePieceEat(startX,startY,eat,game,gameClientInfo);
-            //i also have to tell to the server the move that i have done
-            movePieceToServer(startX, startY, eat, endResult,true);
-
+            if (!gameClientInfo.showPossibleMoves) {
+                let endResult = await analysePieceEat(startX,startY,eat,game,gameClientInfo);
+                //i also have to tell to the server the move that i have done
+                movePieceToServer(startX, startY, eat, endResult,true);
+            }
             return new Promise(resolve => resolve(2));
 
         }
