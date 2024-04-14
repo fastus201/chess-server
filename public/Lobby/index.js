@@ -106,6 +106,7 @@ function setGame(me,opponent,options,color) {
             King: Infinity
         }
     }
+    adjustMeasure();
 
 
 
@@ -129,7 +130,7 @@ function setGame(me,opponent,options,color) {
 
     //To adjust game sizes
     window.onresize = adjustMeasure;
-    adjustMeasure();
+   
 
     function adjustMeasure() {
         let width = window.innerWidth;
@@ -231,17 +232,19 @@ export function showEndGame(reasons,gameClientInfo,color){
         else if(reasons[0] == "draw"){
             document.getElementById("endGame-reason").innerText = reasons[1];
             document.getElementById("all-modal-content").style.backgroundColor = "var(--color1)";
-        }//If someone disconnects
-        else if(reasons[0] == "yourDisconecct"){
-            mainString = "You won!";
-            document.getElementById("all-modal-content").style.backgroundColor = "var(--color2)";
-            document.getElementById("endGame-reason").innerHTML = "<i>" + reasons[1] + "</i>" + " disconnects";
         }
-        else{
+        else if(reasons[0] == "yourDisonnect"){
+
             let color = (gameClientInfo.myColor == "white" ? "black" : "white");
             mainString = color.charAt(0).toUpperCase() + color.slice(1) + " has won!";
             document.getElementById("all-modal-content").style.backgroundColor = "var(--color1)";
             document.getElementById("endGame-reason").innerHTML = "You have been disconnected from the game!";
+        }//If someone disconnects ( Not you)
+        else{
+
+            mainString = "You won!";
+            document.getElementById("all-modal-content").style.backgroundColor = "var(--color2)";
+            document.getElementById("endGame-reason").innerHTML = "<i>" + reasons[1] + "</i>" + " disconnects";
         }
         document.getElementById("main-result").innerText = mainString;
         myModal.show();
