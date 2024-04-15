@@ -177,6 +177,7 @@ body{
     padding-bottom: 10px;
     display: flex;
     gap: 20px;
+    flex-wrap: wrap;
    
 }
 
@@ -190,6 +191,7 @@ body{
     justify-content: center;
     align-items: center;
     height:var(--capturedSize);
+    flex-wrap: wrap;
 }
 
 .captured-piece{
