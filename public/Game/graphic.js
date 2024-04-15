@@ -775,7 +775,7 @@ export function handleKeyPress(game, gameClientInfo, event) {
     //mostra la mossa precedente
     //(currentMossa) contiene la mossa a cui sono arrivato
     if (keyPressed == "Enter")
-        console.log(gameClientInfo);
+        console.log(socket);
     if (keyPressed == "ArrowLeft") {
         if (gameClientInfo.modalOpen){ 
             myModal.hide();

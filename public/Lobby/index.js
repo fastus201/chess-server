@@ -106,7 +106,7 @@ function setGame(me,opponent,options,color) {
             King: Infinity
         }
     }
-    adjustMeasure();
+    adjustMeasure(gameClientInfo);
 
 
 
@@ -129,40 +129,7 @@ function setGame(me,opponent,options,color) {
 
 
     //To adjust game sizes
-    window.onresize = adjustMeasure;
-   
-
-    function adjustMeasure() {
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-
-
-        let maxWidth = gameClientInfo.measures.sizeCella * gameClientInfo.measures.width;
-        
-        while (maxWidth >= width - 30) {
-            gameClientInfo.measures.sizeCella --;
-            maxWidth = gameClientInfo.measures.sizeCella * gameClientInfo.measures.width;
-        }
-        while (maxWidth <= width - 30 && width < 800) {
-            gameClientInfo.measures.sizeCella++;
-            maxWidth = gameClientInfo.measures.sizeCella * gameClientInfo.measures.width;
-        }
-        let maxHeight = gameClientInfo.measures.sizeCella * gameClientInfo.measures.height;
-        while (maxHeight >= height - 125) {
-            gameClientInfo.measures.sizeCella --;
-            maxHeight = gameClientInfo.measures.sizeCella * gameClientInfo.measures.height;
-        }
-        while (maxHeight <= height - 125 && height < 675) {
-            gameClientInfo.measures.sizeCella++;
-            maxHeight = gameClientInfo.measures.sizeCella * gameClientInfo.measures.height;
-        }
-        
-        
-        
-    
-        document.querySelector(":root").style.setProperty("--sizeCella", gameClientInfo.measures.sizeCella + "px");
-    }
-
+    window.onresize = adjustMeasure.bind(null,gameClientInfo);
 
     //Called when your enemy moves a piece
     socket.on("movePieceFromServer", (data) => {
@@ -203,8 +170,25 @@ function setGame(me,opponent,options,color) {
         gameClientInfo.ended = true;
         showEndGame(["yourDisconnect",gameClientInfo.myName],gameClientInfo);
     })
+}
+
+/**
+ * @desscription Function called to adjust chess measure
+ * @param {ClientGame} gameClientInfo 
+ */
+function adjustMeasure(gameClientInfo) {
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    //I calculate the ideal size for my pieces
+    let rightSizeCella = width / gameClientInfo.measures.width;
+    let rightSizeCella2 = Math.floor(height / gameClientInfo.measures.height) - 12;
+    //I take the smalles measure
+    let corretSize = rightSizeCella < rightSizeCella2 ? rightSizeCella : rightSizeCella2;
 
 
+    gameClientInfo.measures.sizeCella = corretSize;
+    document.querySelector(":root").style.setProperty("--sizeCella", gameClientInfo.measures.sizeCella + "px");
 }
 
 /**

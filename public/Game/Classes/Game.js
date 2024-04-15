@@ -213,8 +213,6 @@ export default class Game {
         //allora, se NON posso muovere neanche un pezzo, potrebbe essere sia patta o MATTO, dipende se se sotto scacco
         let isScacco = this.findScacco(pedina.y, pedina.x);
         mossa.causes = (isScacco || 0) ? "check" : "none";
-        if (isScacco)
-            console.log("SCACCO");
         if (this.canOtherPiecesMove(pedina.color)) {
             if (!isScacco) {
                 mossa.causes = "draw";
@@ -434,7 +432,6 @@ export default class Game {
             allPossiblePieceMoves = this.filterPossibleMoves(allPossiblePieceMoves, piece);
             //se trovo anche solo una mossa, smetto di cercare
             if (allPossiblePieceMoves.length > 0) {
-                //console.log(this.#chessboard[piece.y][piece.x]," puo muoversi");
                 canMove = false;
                 return;
             }
@@ -442,7 +439,6 @@ export default class Game {
             let allPossiblePieceEats = this.#chessboard[piece.y][piece.x].returnPossibleEats(this.#chessboard);
             allPossiblePieceEats = this.filterPossibleMoves(allPossiblePieceEats, piece);
             if (allPossiblePieceEats.length > 0) {
-                //console.log(this.#chessboard[piece.y][piece.x],  " puo mangiare");
                 canMove = false;
                 return;
             }
@@ -499,7 +495,7 @@ export default class Game {
 
     /**
      * @description Metodo che verifica se il re può arroccare
-     * @param {Array.<{x:Number,y:Number}>} moves Vettore di oggetti che rappresentano ogni mossa possibile che un pezzo può fare
+     * @param {{x:Number,y:Number}[]} moves Vettore di oggetti che rappresentano ogni mossa possibile che un pezzo può fare
      * @param {King} pedina Il re che vuole arroccare
      * @returns {Boolean} Ritorna true|false se il re può arroccare
      */
@@ -509,25 +505,24 @@ export default class Game {
         //prendo la riga dove sta accadendo l'arrocco
         let row = this.chessboard[pedina.y];
         const compareArray = (arr1, arr2) => {
-            let equal = true;
             for (let i = 0; i < arr1.length; ++i) {
                 if (JSON.stringify(arr1[i]) != JSON.stringify(arr2[i]))
-                    equal = false;
+                    return false;
             }
-            if (equal)
-                return true;
-            return false;
+            return true;
         }
         //se c'è la torre all'inizio e non si è mossa controllo la parte a sinistra del re
+        let kingX = pedina.x;
         if (row[0].name == "Rook" && !row[0].moved) {
             let canMove = true;
-            for (let i = 1; i < 4; ++i) {
+            for (let i = 1; i < kingX; ++i) {
                 if (row[i] != 0)
                     canMove = false;
             }
             //ok il campo è libero per arroccare
             if (canMove) {
-                let movesCastle = [{ x: 2, y: pedina.y, castle: true, rook: { x: 0, y: pedina.y, endX: 3 } }, { x: 3, y: pedina.y }];
+                let movesCastle = [{ x: kingX-2, y: pedina.y, castle: true, rook: { x: 0, y: pedina.y, endX: kingX-1 } }, { x: kingX-1, y: pedina.y }];
+
                 //adesso filtro le mosse in modo da capire se posso arroccare e se nessuna parte è sotto scacco
                 let filteredMoves = this.filterPossibleMoves(movesCastle, pedina);
                 if (compareArray(movesCastle, filteredMoves)) {
@@ -539,14 +534,14 @@ export default class Game {
         //se c'è la torre alla FINE e non si è mossa controllo la parte a sinistra del re
         if (row[this.#width - 1].name == "Rook" && !row[this.#width - 1].moved) {
             let canMove = true;
-            for (let i = 5; i < this.#width - 1; ++i) {
+            for (let i = kingX+1; i < this.#width - 1; ++i) {
                 if (row[i] != 0)
                     canMove = false;
             }
             //ok il campo è libero per arroccare
             if (canMove) {
 
-                let movesCastle = [{ x: 5, y: pedina.y }, { x: 6, y: pedina.y, castle: true, rook: { x: this.#width - 1, y: pedina.y, endX: 5 } }];
+                let movesCastle = [{ x: kingX + 1, y: pedina.y }, { x: kingX + 2, y: pedina.y, castle: true, rook: { x: this.#width-1, y: pedina.y, endX: kingX+1 } }];
                 //adesso filtro le mosse in modo da capire se posso arroccare e se nessuna parte è sotto scacco
                 let filteredMoves = this.filterPossibleMoves(movesCastle, pedina);
                 if (compareArray(movesCastle, filteredMoves)) {

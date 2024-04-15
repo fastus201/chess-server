@@ -108,6 +108,7 @@ io.on("connection",(socket)=>{
         if(data.move.castle){
             data.move.rook.y = reverseCoord(data.move.rook.y);
             data.move.rook.x = reverseCoord(data.move.rook.x);
+            data.move.rook.endX = reverseCoord(data.move.rook.endX);
         }
         if(data.move.enPassantPiece){
             data.move.enPassantPiece.y = reverseCoord(data.move.enPassantPiece.y);
